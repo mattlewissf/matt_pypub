@@ -1,15 +1,6 @@
 """
 Download a Book on Space Battles
-
-NOTE: most of the code-complexity in this script
-comes from how incomplete the lxml xpath engine is
 """
-import sys
-sys.path.insert(0, '../')
-
-import pypub
-print(pypub.__file__)
-
 import time
 import random
 import logging
