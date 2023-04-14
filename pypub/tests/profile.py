@@ -16,7 +16,7 @@ def _create_epub():
         epub    = Epub('My First Epub')
         chapter = create_chapter_from_url('https://en.wikipedia.org/wiki/Grand_Teton_National_Park')
         epub.add_chapter(chapter)
-        epub.create_epub('.', 'profile-test.epub')
+        epub.create('./profile-test.epub')
     finally:
         try:
             os.remove('./profile-test.epub')

@@ -1,15 +1,18 @@
 import os
 import shutil
 import unittest
-from typing import List
+from typing import Set
 
-from .. import *
+from ..epub import Epub
+from ..chapter import create_chapter_from_file
 
 #** Variables **#
-static = os.path.realpath(os.path.join(os.path.dirname(__file__),'static'))
 
-example_html = os.path.join(static, 'example.html')
-example_book = os.path.join(static, 'example_book')
+STATIC = os.path.realpath(os.path.join(os.path.dirname(__file__), 'static'))
+
+EXAMPLE_HTML = os.path.join(STATIC, 'example.html')
+
+EXAMPLE_BOOK = os.path.join(STATIC, 'example_book')
 
 #** Tests **#
 
@@ -17,14 +20,14 @@ class EpubTests(unittest.TestCase):
 
     def setUp(self):
         """generate epub object for testing"""
-        chapter   = create_chapter_from_file(example_html)
+        chapter   = create_chapter_from_file(EXAMPLE_HTML)
         self.epub = Epub('title')
         self.epub.add_chapter(chapter)
 
-    def _walk(self, path: str) -> List[str]:
+    def _walk(self, path: str) -> Set[str]:
         """generate a list of files included in tree"""
         tree = set()
-        for root, dirs, files in os.walk(path):
+        for root, _, files in os.walk(path):
             fpath = root.split(path, 1)[1]
             for file in files:
                 tree.add(os.path.join(fpath, file))
@@ -33,12 +36,12 @@ class EpubTests(unittest.TestCase):
     def test_create_epub(self):
         """generate an epub directory-tree ready for zipping"""
         try:
-            self.epub._generate()
-            tree1 = self._walk(self.epub.EPUB_DIR)
-            tree2 = self._walk(example_book)
+            edir  = self.epub.build_epub_dir()
+            tree1 = self._walk(edir)
+            tree2 = self._walk(EXAMPLE_BOOK)
             self.assertEqual(tree1, tree2)
         finally:
-            shutil.rmtree(self.epub.EPUB_DIR, True)
+            self.epub.builder.cleanup()
 
 #** Main **#
 
