@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='pypub3',
-    version='2.0.0',
+    version='2.0.1',
     license='MIT',
     author='Andrew Scott',
     author_email='imgurbot12@gmail.com',
@@ -16,17 +16,17 @@ setup(
     python_requires='>=3.6',
     packages=find_packages(),
     install_requires=[
-        'jinja2',
-        'pyxml3',
-        'pillow',
-        'dataclasses',
+        'pyxml3>=0.0.2',
+        'jinja2>=3.1.2',
+        'dataclasses>=0.6',
+        'pillow>=10.0.0',
     ],
     package_data={
         'pypub': [
-            'templates/*', 
-            'static/*', 
-            'static/css/*', 
-            'static/img/*', 
+            'templates/*',
+            'static/*',
+            'static/css/*',
+            'static/img/*',
             'static/fonts/*'
         ]
     },
