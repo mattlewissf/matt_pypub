@@ -33,6 +33,13 @@ class ChapterTests(unittest.TestCase):
         self.assertEqual(c.url, 'https://www.example.com')
         self.assertIn(b'illustrative examples', c.content)
 
+    def test_create_chapter_example(self):
+        """complete test for readme example"""
+        c = create_chapter_from_url('https://en.wikipedia.org/wiki/EPUB')
+        self.assertEqual(c.title, 'EPUB - Wikipedia')
+        self.assertEqual(c.url, 'https://en.wikipedia.org/wiki/EPUB')
+        self.assertIn(b'EPUB 3.2 was announced in 2018', c.content)
+
 #** Main **#
 
 if __name__ == '__main__':

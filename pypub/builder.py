@@ -184,6 +184,9 @@ class EpubBuilder:
 
     def begin(self) -> EpubDirs:
         """begin building operations w/ basic file structure"""
+        # read jinja2 chapter template
+        if not self.template:
+            self.template = jinja_env.get_template('page.xhtml.j2')
         if self.dirs:
             return self.dirs
         args = (self.epub.title, self.epub.creator)
@@ -192,7 +195,6 @@ class EpubBuilder:
         self.dirs = epub_dirs(self.epub.epub_dir)
         copy_static('mimetype', self.dirs.basedir)
         copy_static('container.xml', self.dirs.metainf)
-        copy_static('coverpage.xhtml', self.dirs.oebps)
         copy_static('css/coverpage.css', self.dirs.styles)
         copy_static('css/styles.css', self.dirs.styles)
         for path in self.epub.css_paths:
@@ -201,11 +203,15 @@ class EpubBuilder:
         if self.epub.cover is not None:
             self.cover = os.path.basename(self.epub.cover)
             copy_file(self.epub.cover, self.dirs.images)
-            return self.dirs 
-        self.logger.info('generating cover-image (%r by %r)' % args)
-        self.cover = generate_cover(*args, self.dirs.images)
-        # read jinja2 chapter template
-        self.template = jinja_env.get_template('page.xhtml.j2')
+        else:
+            self.logger.info('generating cover-image (%r by %r)' % args)
+            self.cover = generate_cover(*args, self.dirs.images)
+        # render cover-image
+        fpath    = os.path.join(self.dirs.oebps, 'coverpage.xhtml')
+        template = jinja_env.get_template('coverpage.xhtml.j2')
+        with open(fpath, 'w') as f:
+            cover = template.render(cover=os.path.join('images', self.cover))
+            f.write(cover)
         return self.dirs
 
     def render_chapter(self, assign: Assignment, chapter: Chapter):

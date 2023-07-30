@@ -9,7 +9,7 @@ import urllib.request
 from logging import Logger
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, cast
 
 import imghdr
 import pyxml.html
@@ -102,8 +102,9 @@ def render_images(ctx: 'RenderCtx', chunk_size: int = 8192):
         try:
             res = urlrequest(url, timeout=ctx.timeout)
             # ensure status of response is valid
-            if res.status and res.status != 200:
-                raise urllib.error.URLError(f'status: {res.status}')
+            status = getattr(res, 'status', None)
+            if status and status != 200:
+                raise urllib.error.URLError(f'status: {status}')
             # read first chunk to determine content-type
             chunk = res.read(chunk_size)
             mime  = imghdr.what(None, h=chunk)
@@ -229,7 +230,8 @@ class SimpleChapterFactory(ChapterFactory):
                         elem.attrib.pop(attr)
             # if element is not supported, append children to parent
             else:
-                parent = elem.getparent()
+                # retrieve parent
+                parent = cast(HtmlElement, elem.getparent())
                 for child in elem.getchildren():
                     parent.append(child)
                 parent.remove(elem)
@@ -241,7 +243,7 @@ class SimpleChapterFactory(ChapterFactory):
         # ensure all images with no src are removed
         for img in etree.xpath('.//img'):
             if 'src' not in img.attrib:
-                img.getparent().remove(img)
+                cast(HtmlElement, img.getparent()).remove(img)
         # return new element-tree
         return etree
 
