@@ -1,22 +1,24 @@
 import os
-import shutil
 import unittest
 from typing import Set
 
+from . import LOCAL_IMAGE, STATIC
 from ..epub import Epub
 from ..chapter import create_chapter_from_file
 
 #** Variables **#
+__all__ = ['EpubTests']
 
-STATIC = os.path.realpath(os.path.join(os.path.dirname(__file__), 'static'))
-
+#: example html from static test-files directory
 EXAMPLE_HTML = os.path.join(STATIC, 'example.html')
 
+#: example book file-tree from static test-files directory
 EXAMPLE_BOOK = os.path.join(STATIC, 'example_book')
 
 #** Tests **#
 
 class EpubTests(unittest.TestCase):
+    """Epub Complete Book Generation UnitTests"""
 
     def setUp(self):
         """generate epub object for testing"""
@@ -40,6 +42,17 @@ class EpubTests(unittest.TestCase):
             tree1 = self._walk(edir)
             tree2 = self._walk(EXAMPLE_BOOK)
             self.assertEqual(tree1, tree2)
+        finally:
+            self.epub.builder.cleanup()
+ 
+    def test_custom_cover(self):
+        """ensure custom cover generation works as intended"""
+        self.epub.cover = LOCAL_IMAGE
+        try:
+            edir  = self.epub.build_epub_dir()
+            fname = os.path.basename(self.epub.cover)
+            fpath = os.path.join(edir, f'OEBPS/images/{fname}')
+            self.assertTrue(os.path.exists(fpath), 'no such cover')
         finally:
             self.epub.builder.cleanup()
 

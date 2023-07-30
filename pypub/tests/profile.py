@@ -26,7 +26,7 @@ def _create_epub():
 #** Tests **#
 
 class Profiling(unittest.TestCase):
-    """profile based unit-tests"""
+    """Profile Based UnitTests"""
 
     def test_epub_profile(self):
         """complete profile on generating the given epub"""
