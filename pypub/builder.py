@@ -211,7 +211,7 @@ class EpubBuilder:
         # render cover-image
         fpath    = os.path.join(self.dirs.oebps, 'coverpage.xhtml')
         template = jinja_env.get_template('coverpage.xhtml.j2')
-        with open(fpath, 'w') as f:
+        with open(fpath, 'w', encoding=self.encoding) as f:
             cover = template.render(cover=os.path.join('images', self.cover))
             f.write(cover)
         return self.dirs
