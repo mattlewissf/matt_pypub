@@ -112,13 +112,13 @@ def get_extension(fname: str) -> str:
     """get extension of the given filename"""
     return fname.rsplit('.', 1)[-1]
 
-def render_template(name: str, into: str, kwargs: dict):
+def render_template(name: str, into: str, encoding: str, kwargs: dict):
     """render template in templates directory"""
     fname    = name.rsplit('.j2', 1)[0]
     dest     = os.path.join(into, os.path.basename(fname))
     template = jinja_env.get_template(name)
     content  = template.render(**kwargs)
-    with open(dest, 'w') as f:
+    with open(dest, 'w', encoding=encoding) as f:
         f.write(content)
 
 #** Classes **#
@@ -151,6 +151,7 @@ class EpubSpec:
     language:  str            = 'en'
     rights:    str            = ''
     publisher: str            = 'pypub'
+    encoding:  str            = 'utf-8'
     date:      datetime       = field(default_factory=datetime.now)
     cover:     Optional[str]  = None
     epub_dir:  Optional[str]  = None
@@ -164,10 +165,11 @@ class EpubBuilder:
     """
 
     def __init__(self, epub: EpubSpec):
-        self.uid     = str(uuid.uuid4())
-        self.epub    = epub
-        self.logger  = epub.logger
-        self.factory = epub.factory
+        self.uid      = str(uuid.uuid4())
+        self.epub     = epub
+        self.logger   = epub.logger
+        self.factory  = epub.factory
+        self.encoding = epub.encoding
         self.dirs:     Optional[EpubDirs]    = None
         self.cover:    Optional[str]         = None
         self.template: Optional[Template]    = None
@@ -247,9 +249,9 @@ class EpubBuilder:
         }
         # render and write the rest of the templates
         self.logger.info('epub=%r, writing final templates' % self.epub.title)
-        render_template('book.ncx.j2', self.dirs.oebps, kwargs)
-        render_template('book.opf.j2', self.dirs.oebps, kwargs)
-        render_template('toc.xhtml.j2', self.dirs.oebps, kwargs)
+        render_template('book.ncx.j2', self.dirs.oebps, self.encoding, kwargs)
+        render_template('book.opf.j2', self.dirs.oebps, self.encoding, kwargs)
+        render_template('toc.xhtml.j2', self.dirs.oebps, self.encoding, kwargs)
 
     def compress(self, fpath: Optional[str] = None) -> str:
         """compress build and zip content into epub"""
