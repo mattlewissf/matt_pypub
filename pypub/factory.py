@@ -9,7 +9,7 @@ import urllib.request
 from logging import Logger
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Protocol, cast
+from typing import Protocol, Optional, cast
 
 import imghdr
 import pyxml.html
@@ -30,6 +30,10 @@ __all__ = [
     'ChapterFactory', 
     'SimpleChapterFactory'
 ]
+
+#NOTE: monkey patch pyxml to not use &nbsp escape character in attributes
+from pyxml.escape import ESCAPE_ATTRIB
+ESCAPE_ATTRIB.pop(' ', None)
 
 #: unicode characters to replace if found in content
 REPLACE = dict([(ord(x), ord(y)) for x,y in zip(u"‘’´“”–-", u"'''\"\"--")])
@@ -77,6 +81,24 @@ SUPPORTED_TAGS = {
 
 #** Functions **#
 
+def mime_type(url: str, data: bytes) -> Optional[str]:
+    """
+    determine mimetype of the given file w/ first chunk of data
+
+    :param url:  download url
+    :param data: first n-bytes of file
+    :return:     determined mime-type (if found)
+    """
+    mime = imghdr.what(None, h=data)
+    if mime is not None:
+        return mime
+    # backport new jpeg logic from 3.11 for older versions
+    if data[:4] == b'\xff\xd8\xff\xdb':
+        return 'jpeg'
+    # support svg images
+    if url.endswith('svg') and data.strip().startswith(b'<svg'):
+        return 'svg'
+
 def render_images(ctx: 'RenderCtx', chunk_size: int = 8192):
     """
     replace global image references w/ local downloaded ones
@@ -107,7 +129,7 @@ def render_images(ctx: 'RenderCtx', chunk_size: int = 8192):
                 raise urllib.error.URLError(f'status: {status}')
             # read first chunk to determine content-type
             chunk = res.read(chunk_size)
-            mime  = imghdr.what(None, h=chunk)
+            mime  = mime_type(url, chunk)
             if not mime:
                 ctx.logger.warning('chapter[%s] cannot identify %r mime' % fmt)
                 continue
@@ -124,6 +146,19 @@ def render_images(ctx: 'RenderCtx', chunk_size: int = 8192):
             image.attrib['src'] = epub_path
         except urllib.error.URLError:
             ctx.logger.error('chapter[%s] failed to download %r' % fmt)
+
+def externalize_links(url: str, elem: HtmlElement):
+    """
+    iterate every anchor tag and externalize the links when able
+
+    :param url:  url for chapter being rendered
+    :param elem: root element for chapter object
+    """
+    for e in elem.finditer('//a'):
+        href = e.attrib.get('href', None)
+        if not href or '://' in href[:10] or href.startswith('#'):
+            continue
+        e.attrib['href'] = urllib.parse.urljoin(url, href)
 
 def xmlprettify(elem: HtmlElement, chars: str='  ', level: int=1):
     """
@@ -165,6 +200,7 @@ class RenderCtx:
     imagedir:      str
     template:      Template
     render_kwargs: dict = field(default_factory=dict)
+    extern_links:  bool = False
     timeout:       int  = 10
 
 class ChapterFactory(Protocol):
@@ -224,9 +260,9 @@ class SimpleChapterFactory(ChapterFactory):
         for elem in [elem for elem in etree.iter()][1:]:
             # if element tag is supported
             if elem.tag in SUPPORTED_TAGS:
-                # remove attributes not approved for specific tag
-                for attr in list(elem.attrib.keys()):
-                    if attr not in SUPPORTED_TAGS[elem.tag]:
+                # remove attributes not approved for specific tag or no value
+                for attr, value in list(elem.attrib.items()):
+                    if attr not in SUPPORTED_TAGS[elem.tag] or not value:
                         elem.attrib.pop(attr)
             # if element is not supported, append children to parent
             else:
@@ -240,10 +276,14 @@ class SimpleChapterFactory(ChapterFactory):
                 # than text attribute, so we also append tail to text
                 if elem.tail and elem.tail.strip():
                     parent.text = (parent.text or '') + elem.tail.strip()
-        # ensure all images with no src are removed
+        # fix and remove invalid images
         for img in etree.xpath('.//img'):
+            # ensure all images with no src are removed
             if 'src' not in img.attrib:
                 cast(HtmlElement, img.getparent()).remove(img)
+            # ensure they also have an alt
+            elif 'alt' not in img.attrib:
+                img.attrib['alt'] = img.attrib['src']
         # return new element-tree
         return etree
 
@@ -252,6 +292,8 @@ class SimpleChapterFactory(ChapterFactory):
         modify chapter element-tree to render images
         """
         render_images(ctx)
+        if ctx.extern_links and ctx.chapter.url:
+            externalize_links(ctx.chapter.url, ctx.etree)
     
     def prettify(self, root: HtmlElement):
         """
