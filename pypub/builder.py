@@ -146,18 +146,19 @@ class EpubSpec:
     """
     Epub Builder Specification
     """
-    title:     str
-    creator:   str            = 'pypub'
-    language:  str            = 'en'
-    rights:    str            = ''
-    publisher: str            = 'pypub'
-    encoding:  str            = 'utf-8'
-    date:      datetime       = field(default_factory=datetime.now)
-    cover:     Optional[str]  = None
-    epub_dir:  Optional[str]  = None
-    factory:   ChapterFactory = field(repr=False, default_factory=SimpleChapterFactory)
-    logger:    Logger         = field(repr=False, default=default_logger)
-    css_paths: List[str]      = field(repr=False, default_factory=list)
+    title:        str
+    creator:      str            = 'pypub'
+    language:     str            = 'en'
+    rights:       str            = ''
+    publisher:    str            = 'pypub'
+    encoding:     str            = 'utf-8'
+    date:         datetime       = field(default_factory=datetime.now)
+    cover:        Optional[str]  = None
+    epub_dir:     Optional[str]  = None
+    extern_links: bool           = False
+    factory:      ChapterFactory = field(repr=False, default_factory=SimpleChapterFactory)
+    logger:       Logger         = field(repr=False, default=default_logger)
+    css_paths:    List[str]      = field(repr=False, default_factory=list)
 
 class EpubBuilder:
     """
@@ -228,7 +229,8 @@ class EpubBuilder:
         args    = (self.logger, chapter, self.dirs.images, self.template)
         kwargs  = {'epub': self.epub, 'chapter': chapter}
         fpath   = os.path.join(self.dirs.oebps, assign.link)
-        content = self.factory.render(*args, kwargs)
+        content = self.factory.render(*args, kwargs, 
+            extern_links=self.epub.extern_links)
         with open(fpath, 'wb') as f:
             f.write(content)
 
