@@ -282,7 +282,7 @@ class SimpleChapterFactory(ChapterFactory):
             if 'src' not in img.attrib:
                 cast(HtmlElement, img.getparent()).remove(img)
             # ensure they also have an alt
-            if 'alt' not in img.attrib:
+            elif 'alt' not in img.attrib:
                 img.attrib['alt'] = img.attrib['src']
         # return new element-tree
         return etree
