@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='pypub3',
-    version='2.0.3',
+    version='2.0.4',
     license='MIT',
     author='Andrew Scott',
     author_email='imgurbot12@gmail.com',
