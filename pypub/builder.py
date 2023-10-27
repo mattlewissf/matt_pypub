@@ -41,6 +41,7 @@ COVER_FONT = os.path.join(STATIC, 'fonts/free_mono.ttf')
 
 #: jinja2 environment to load templates
 jinja_env = Environment(loader=FileSystemLoader(TEMPLATES))
+jinja_env.filters['basename'] = os.path.basename
 
 #: default logging instance for library
 default_logger = logging.getLogger('pypub')
@@ -212,8 +213,9 @@ class EpubBuilder:
         # render cover-image
         fpath    = os.path.join(self.dirs.oebps, 'coverpage.xhtml')
         template = jinja_env.get_template('coverpage.xhtml.j2')
+        cover    = os.path.join('images', self.cover)
         with open(fpath, 'w', encoding=self.encoding) as f:
-            cover = template.render(cover=os.path.join('images', self.cover))
+            cover = template.render(cover=cover, epub=self.epub)
             f.write(cover)
         return self.dirs
 
