@@ -100,7 +100,7 @@ def mime_type(url: str, data: bytes) -> Optional[str]:
     if data[:4] == b'\xff\xd8\xff\xdb':
         return 'jpeg'
     # support svg images
-    if url.endswith('svg') and data.strip().startswith(b'<svg'):
+    if url.endswith('svg') and b'<svg' in data:
         return 'svg'
 
 def render_images(ctx: 'RenderCtx', chunk_size: int = 8192):
