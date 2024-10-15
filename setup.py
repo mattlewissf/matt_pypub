@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='pypub3',
-    version='2.0.5',
+    version='2.0.6',
     license='MIT',
     author='Andrew Scott',
     author_email='imgurbot12@gmail.com',
@@ -20,6 +20,7 @@ setup(
         'jinja2>=3.1.2',
         'dataclasses>=0.6',
         'pillow>=10.0.0',
+        'filetype>=1.2.0'
     ],
     package_data={
         'pypub': [
