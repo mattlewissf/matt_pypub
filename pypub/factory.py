@@ -11,7 +11,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Protocol, Optional, cast
 
-import imghdr
+import filetype
 import pyxml.html
 from pyxml.html import HtmlElement
 from jinja2 import Template
@@ -26,8 +26,8 @@ __all__ = [
     'render_images',
     'xmlprettify',
 
-    'RenderCtx', 
-    'ChapterFactory', 
+    'RenderCtx',
+    'ChapterFactory',
     'SimpleChapterFactory'
 ]
 
@@ -93,12 +93,9 @@ def mime_type(url: str, data: bytes) -> Optional[str]:
     :param data: first n-bytes of file
     :return:     determined mime-type (if found)
     """
-    mime = imghdr.what(None, h=data)
+    mime = filetype.image_match(data)
     if mime is not None:
-        return mime
-    # backport new jpeg logic from 3.11 for older versions
-    if data[:4] == b'\xff\xd8\xff\xdb':
-        return 'jpeg'
+        return mime.EXTENSION
     # support svg images
     if url.endswith('svg') and b'<svg' in data:
         return 'svg'
@@ -167,7 +164,7 @@ def externalize_links(url: str, elem: HtmlElement):
 def xmlprettify(elem: HtmlElement, chars: str='  ', level: int=1):
     """
     prettify the given element-tree w/ new indentations
-    
+
     :param elem:  element being prettified
     :param chars: characters used for single indent
     :param level: internal variable used to track indent level
@@ -208,7 +205,7 @@ class RenderCtx:
     timeout:       int  = 10
 
 class ChapterFactory(Protocol):
-    
+
     @abstractmethod
     def cleanup_html(self, content: bytes) -> HtmlElement:
         """
@@ -229,7 +226,7 @@ class ChapterFactory(Protocol):
         complete final rendering of chapter object and render as html bytes
         """
         raise NotImplementedError
-   
+
     @abstractmethod
     def prettify(self, root: HtmlElement):
         """
@@ -298,7 +295,7 @@ class SimpleChapterFactory(ChapterFactory):
         render_images(ctx)
         if ctx.extern_links and ctx.chapter.url:
             externalize_links(ctx.chapter.url, ctx.etree)
-    
+
     def prettify(self, root: HtmlElement):
         """
         simple xml prettify function
