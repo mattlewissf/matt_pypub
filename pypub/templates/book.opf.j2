@@ -22,9 +22,9 @@
     <item id="css_{{ loop.index }}" href="styles/{{ css }}" media-type="text/css" />
     {%- endfor %}
     <!-- images references -->
-    <item id="cover_img" href="images/{{ cover.name }}" media-type="image/{{ cover.mime }}" />
+    <item id="cover_img" href="images/{{ cover.name }}" media-type="{{ cover.mime }}" />
     {%- for image in images %}
-    <item id="{{ image.name }}" href="images/{{ image.name }}" media-type="image/{{ image.mime }}" />
+    <item id="{{ image.name }}" href="images/{{ image.name }}" media-type="{{ image.mime }}" />
     {%- endfor %}
     <!-- chapter inclusions -->
     {%- for (assign, _) in chapters %}

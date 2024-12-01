@@ -20,7 +20,7 @@ class Epub(EpubSpec):
         self.chapters: List[AssignedChapter] = []
         self.last_chapter = 1
         self.builder      = self.builder_factory(self)
-    
+
     def assign_chapter(self) -> Assignment:
         """
         retrieve a valid assignment for an ebook chapter
@@ -55,8 +55,8 @@ class Epub(EpubSpec):
         for assign, chapter in self.chapters:
             self.builder.render_chapter(assign, chapter)
         self.builder.index()
-        return dirs.basedir 
- 
+        return dirs.basedir
+
     def create(self, fpath: Optional[str] = None) -> str:
         """
         generate an epub book at the given filepath

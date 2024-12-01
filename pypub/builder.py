@@ -4,9 +4,10 @@ Epub Book Generator
 import os
 import uuid
 import shutil
+import logging
 import zipfile
 import tempfile
-import logging
+import mimetypes
 from logging import Logger
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -109,9 +110,10 @@ def generate_cover(title: str, author: str, images: str) -> str:
         image.save(fpath)
         return 'cover.png'
 
-def get_extension(fname: str) -> str:
-    """get extension of the given filename"""
-    return fname.rsplit('.', 1)[-1]
+def image_mime(fname: str) -> str:
+    """get image mime of the given filename"""
+    (ext, _) = mimetypes.guess_type(fname)
+    return ext or 'image/unknown'
 
 def render_template(name: str, into: str, encoding: str, kwargs: dict):
     """render template in templates directory"""
@@ -176,7 +178,7 @@ class EpubBuilder:
         self.cover:    Optional[str]         = None
         self.template: Optional[Template]    = None
         self.chapters: List[AssignedChapter] = []
-    
+
     def __enter__(self):
         """begin epub building in context-manager"""
         self.begin()
@@ -231,7 +233,7 @@ class EpubBuilder:
         args    = (self.logger, chapter, self.dirs.images, self.template)
         kwargs  = {'epub': self.epub, 'chapter': chapter}
         fpath   = os.path.join(self.dirs.oebps, assign.link)
-        content = self.factory.render(*args, kwargs, 
+        content = self.factory.render(*args, kwargs,
             extern_links=self.epub.extern_links)
         with open(fpath, 'wb') as f:
             f.write(content)
@@ -242,12 +244,12 @@ class EpubBuilder:
             raise RuntimeError('cannot index epub before `begin`')
         kwargs = {
             'uid':      self.uid,
-            'epub':     self.epub, 
-            'cover':    MimeFile(self.cover, get_extension(self.cover)),
+            'epub':     self.epub,
+            'cover':    MimeFile(self.cover, image_mime(self.cover)),
             'styles':   os.listdir(self.dirs.styles),
             'chapters': self.chapters,
             'images':   [
-                MimeFile(fname, get_extension(fname))
+                MimeFile(fname, image_mime(fname))
                 for fname in os.listdir(self.dirs.images)
                 if fname != self.cover
             ]
@@ -268,7 +270,7 @@ class EpubBuilder:
         fpath = os.path.dirname(fpath) if fpath else '.'
         fpath = os.path.join(fpath, fname)
         fzip  = fpath.rsplit('.epub', 1)[0] + '.zip'
-        # zip contents of directory 
+        # zip contents of directory
         self.logger.info('epub=%r, zipping content' % self.epub.title)
         zipf = zipfile.ZipFile(fzip, 'w', zipfile.ZIP_DEFLATED)
         for root, _, files in os.walk(self.dirs.basedir):
