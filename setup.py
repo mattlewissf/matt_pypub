@@ -4,7 +4,7 @@ with open("README.md", "r") as f:
     readme = f.read()
 
 setup(
-    name='pypub3',
+    name='matt_pypub',
     version='2.0.7',
     license='MIT',
     author='Andrew Scott',
