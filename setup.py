@@ -16,7 +16,6 @@ setup(
     python_requires='>=3.6',
     packages=find_packages(),
     install_requires=[
-        'pyxml3>=0.0.2',
         'jinja2>=3.1.2',
         'pillow>=10.0.0',
         'filetype>=1.2.0'
