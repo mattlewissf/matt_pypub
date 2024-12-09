@@ -1,4 +1,4 @@
-pyxml3>=0.0.2
+git+https://github.com/mattlewissf/matt_pyxml.git@2102b7ea12fb35e02aff1fcad39caf508f0cc57e#egg=matt_pyxml3
 jinja2>=3.1.2
 pillow>=10.0.0
 filetype>=1.2.0
